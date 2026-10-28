@@ -2,6 +2,18 @@ import { z } from "zod";
 
 // Se usan tanto en el cliente (react-hook-form) como en el servidor (Server Actions).
 
+export const requisitosPassword = [
+  { id: "min", etiqueta: "Mínimo 8 caracteres", prueba: (p: string) => p.length >= 8 },
+  { id: "max", etiqueta: "Máximo 72 caracteres", prueba: (p: string) => p.length <= 72 },
+  { id: "lower", etiqueta: "Al menos una letra minúscula (a–z)", prueba: (p: string) => /[a-z]/.test(p) },
+  { id: "upper", etiqueta: "Al menos una letra mayúscula (A–Z)", prueba: (p: string) => /[A-Z]/.test(p) },
+  { id: "digit", etiqueta: "Al menos un número (0–9)", prueba: (p: string) => /\d/.test(p) },
+] as const;
+
+export function evaluarRequisitosPassword(password: string) {
+  return requisitosPassword.map((r) => ({ ...r, cumple: r.prueba(password) }));
+}
+
 export const loginSchema = z.object({
   correo: z.string().trim().min(1, "Ingresa tu correo").email("Correo no válido").max(120),
   password: z.string().min(1, "Ingresa tu contraseña").max(72),
@@ -47,6 +59,10 @@ export const cambioEstadoSchema = z.object({
   estado: z.enum(["activo", "suspendido", "baja"]),
 });
 
+/** Alta de usuario desde el panel de administración (mismas reglas que el registro público). */
+export const crearUsuarioAdminSchema = registroSchema;
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegistroInput = z.infer<typeof registroSchema>;
+export type CrearUsuarioAdminInput = z.infer<typeof crearUsuarioAdminSchema>;
 export type OperacionInput = z.infer<typeof operacionSchema>;

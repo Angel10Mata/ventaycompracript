@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { AdminCrearUsuario } from "@/components/admin-crear-usuario";
 import { AdminUsuarios, type UsuarioFila } from "@/components/admin-usuarios";
 import { Titulo } from "@/components/ui";
 import { normalizarPerfil, type FilaProfile } from "@/lib/perfil";
@@ -29,8 +30,9 @@ export default async function AdminUsuariosPage() {
     <>
       <Titulo
         titulo="Gestión de usuarios"
-        descripcion="Suspende, reactiva o da de baja cuentas. Los cambios se registran en la auditoría."
+        descripcion="Crea cuentas, suspende, reactiva o da de baja usuarios. Los cambios se registran en la auditoría."
       />
+      <AdminCrearUsuario />
       <AdminUsuarios usuarios={usuarios} adminId={user?.id ?? ""} />
     </>
   );

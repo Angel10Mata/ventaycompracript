@@ -53,3 +53,57 @@ export function fechaCorta(iso: string): string {
 export function hora(iso: string): string {
   return fHora.format(new Date(iso));
 }
+
+const estadoCuenta: Record<string, string> = {
+  activo: "activa",
+  suspendido: "suspendida",
+  baja: "dada de baja",
+};
+
+/** Texto legible para la columna Detalle en auditoría (evita JSON crudo). */
+export function detalleAuditoria(accion: string, detalle: Record<string, unknown>): string {
+  const vacio = !detalle || Object.keys(detalle).length === 0;
+  if (vacio) {
+    if (accion === "login") return "Inicio de sesión en la plataforma";
+    return "—";
+  }
+
+  switch (accion) {
+    case "compra": {
+      const simbolo = String(detalle.simbolo ?? "").trim();
+      const c = detalle.cantidad != null ? cantidad(detalle.cantidad as number | string) : "";
+      const t = detalle.total != null ? dinero(detalle.total as number | string) : "";
+      if (simbolo && c && t) return `Compra de ${c} ${simbolo} por un total de ${t}`;
+      break;
+    }
+    case "venta": {
+      const simbolo = String(detalle.simbolo ?? "").trim();
+      const c = detalle.cantidad != null ? cantidad(detalle.cantidad as number | string) : "";
+      const t = detalle.total != null ? dinero(detalle.total as number | string) : "";
+      if (simbolo && c && t) return `Venta de ${c} ${simbolo} por un total de ${t}`;
+      break;
+    }
+    case "registro": {
+      const correo = String(detalle.correo ?? "").trim();
+      return correo ? `Alta de cuenta con el correo ${correo}` : "Alta de nueva cuenta";
+    }
+    case "creacion_usuario": {
+      const nombre = String(detalle.nombre ?? "").trim();
+      const correo = String(detalle.correo ?? "").trim();
+      if (nombre && correo) return `Administrador creó la cuenta de ${nombre} (${correo})`;
+      if (correo) return `Administrador creó la cuenta ${correo}`;
+      return "Creación de cuenta por administrador";
+    }
+    case "cambio_estado": {
+      const raw = String(detalle.estado ?? "");
+      const etiqueta = estadoCuenta[raw] ?? raw;
+      return etiqueta ? `La cuenta pasó a estado ${etiqueta}` : "Cambio de estado de cuenta";
+    }
+    default:
+      break;
+  }
+
+  return Object.entries(detalle)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(" · ");
+}

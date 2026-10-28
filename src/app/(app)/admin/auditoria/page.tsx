@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Badge, Tabla, Titulo, Vacio, td, th } from "@/components/ui";
-import { fechaHora } from "@/lib/format";
+import { detalleAuditoria, fechaHora } from "@/lib/format";
 import type { RegistroAuditoria } from "@/lib/types";
 
 export const metadata = { title: "Auditoría" };
@@ -11,6 +11,7 @@ const tonos: Record<string, "up" | "down" | "accent" | "neutro"> = {
   login: "neutro",
   registro: "accent",
   cambio_estado: "accent",
+  creacion_usuario: "accent",
 };
 
 export default async function AuditoriaPage() {
@@ -55,8 +56,8 @@ export default async function AuditoriaPage() {
                 <td className={td}>
                   <Badge tono={tonos[f.accion] ?? "neutro"}>{f.accion}</Badge>
                 </td>
-                <td className={`${td} num max-w-md truncate text-xs text-muted`}>
-                  {Object.keys(f.detalle ?? {}).length ? JSON.stringify(f.detalle) : ""}
+                <td className={`${td} max-w-md text-xs text-muted`}>
+                  {detalleAuditoria(f.accion, f.detalle ?? {})}
                 </td>
               </tr>
             ))}

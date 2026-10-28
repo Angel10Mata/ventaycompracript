@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registroAction } from "@/app/actions/auth";
 import { registroSchema, type RegistroInput } from "@/lib/validators";
-import { Button, Campo, Card, Input } from "@/components/ui";
+import { Button, Campo, Card, Input, RequisitosPassword } from "@/components/ui";
 import { dinero } from "@/lib/format";
 import { SALDO_INICIAL } from "@/lib/types";
 
@@ -17,8 +17,11 @@ export default function RegistroPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegistroInput>({ resolver: zodResolver(registroSchema) });
+
+  const password = watch("password") ?? "";
 
   const onSubmit = (values: RegistroInput) => {
     setError(undefined);
@@ -60,8 +63,12 @@ export default function RegistroPage() {
               type="password"
               autoComplete="new-password"
               aria-invalid={!!errors.password}
+              aria-describedby="requisitos-password-registro"
               {...register("password")}
             />
+            <div id="requisitos-password-registro">
+              <RequisitosPassword password={password} />
+            </div>
           </Campo>
           <Campo etiqueta="Confirmar contraseña" error={errors.confirmar?.message}>
             <Input

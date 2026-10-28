@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { MoreVertical } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { cambiarEstadoAction } from "@/app/actions/admin";
 import { Badge, Button, Input, Tabla, Vacio, td, th } from "@/components/ui";
 import { dinero, fechaHora } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { esAdmin, type EstadoCuenta, type Perfil } from "@/lib/types";
 
 export type UsuarioFila = Perfil & { transacciones: number };
@@ -22,6 +24,98 @@ const textos: Record<EstadoCuenta, { titulo: string; boton: string; ok: string }
   baja: { titulo: "¿Dar de baja esta cuenta?", boton: "Sí, dar de baja", ok: "Cuenta dada de baja" },
   activo: { titulo: "¿Reactivar esta cuenta?", boton: "Sí, reactivar", ok: "Cuenta reactivada" },
 };
+
+type ItemMenu = { etiqueta: string; href?: string; peligro?: boolean; onClick?: () => void };
+
+function MenuAccionesUsuario({
+  u,
+  propio,
+  pendiente,
+  onCambiar,
+}: {
+  u: UsuarioFila;
+  propio: boolean;
+  pendiente: boolean;
+  onCambiar: (u: UsuarioFila, estado: EstadoCuenta) => void;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!abierto) return;
+    const cerrar = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setAbierto(false);
+    };
+    document.addEventListener("mousedown", cerrar);
+    return () => document.removeEventListener("mousedown", cerrar);
+  }, [abierto]);
+
+  const items: ItemMenu[] = [{ etiqueta: "Ver perfil", href: `/admin/usuarios/${u.id}` }];
+  if (!propio) {
+    if (u.estado === "activo") {
+      items.push({ etiqueta: "Suspender", onClick: () => onCambiar(u, "suspendido") });
+    } else {
+      items.push({ etiqueta: "Reactivar", onClick: () => onCambiar(u, "activo") });
+    }
+    if (u.estado !== "baja") {
+      items.push({ etiqueta: "Dar de baja", peligro: true, onClick: () => onCambiar(u, "baja") });
+    }
+  }
+
+  return (
+    <div ref={ref} className="relative flex justify-end">
+      <Button
+        type="button"
+        variante="fantasma"
+        className="h-8 w-8 shrink-0 px-0"
+        aria-label={`Acciones para ${u.nombre}`}
+        aria-expanded={abierto}
+        aria-haspopup="menu"
+        disabled={pendiente}
+        onClick={() => setAbierto((v) => !v)}
+      >
+        <MoreVertical className="size-4" aria-hidden />
+      </Button>
+      {abierto && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-20 mt-1 min-w-[11rem] overflow-hidden rounded-lg border border-line bg-surface py-1 shadow-lg"
+        >
+          {items.map((item) =>
+            item.href ? (
+              <Link
+                key={item.etiqueta}
+                href={item.href}
+                role="menuitem"
+                className="block px-3 py-2 text-sm text-fg hover:bg-surface-2"
+                onClick={() => setAbierto(false)}
+              >
+                {item.etiqueta}
+              </Link>
+            ) : (
+              <button
+                key={item.etiqueta}
+                type="button"
+                role="menuitem"
+                disabled={pendiente}
+                className={cn(
+                  "w-full px-3 py-2 text-left text-sm hover:bg-surface-2 disabled:opacity-50",
+                  item.peligro ? "text-down" : "text-fg",
+                )}
+                onClick={() => {
+                  setAbierto(false);
+                  item.onClick?.();
+                }}
+              >
+                {item.etiqueta}
+              </button>
+            ),
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function AdminUsuarios({ usuarios, adminId }: { usuarios: UsuarioFila[]; adminId: string }) {
   const [q, setQ] = useState("");
@@ -113,28 +207,7 @@ export function AdminUsuarios({ usuarios, adminId }: { usuarios: UsuarioFila[]; 
                   <td className={`${td} num text-right`}>{u.transacciones}</td>
                   <td className={`${td} whitespace-nowrap text-muted`}>{fechaHora(u.creado_en)}</td>
                   <td className={td}>
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <Link href={`/admin/usuarios/${u.id}`}>
-                        <Button variante="fantasma" className="h-8 px-3 text-xs">
-                          Ver
-                        </Button>
-                      </Link>
-                      {!propio && u.estado === "activo" && (
-                        <Button variante="secundario" className="h-8 px-3 text-xs" disabled={pendiente} onClick={() => cambiar(u, "suspendido")}>
-                          Suspender
-                        </Button>
-                      )}
-                      {!propio && u.estado !== "activo" && (
-                        <Button variante="secundario" className="h-8 px-3 text-xs" disabled={pendiente} onClick={() => cambiar(u, "activo")}>
-                          Reactivar
-                        </Button>
-                      )}
-                      {!propio && u.estado !== "baja" && (
-                        <Button variante="peligro" className="h-8 px-3 text-xs" disabled={pendiente} onClick={() => cambiar(u, "baja")}>
-                          Dar de baja
-                        </Button>
-                      )}
-                    </div>
+                    <MenuAccionesUsuario u={u} propio={propio} pendiente={pendiente} onCambiar={cambiar} />
                   </td>
                 </tr>
               );

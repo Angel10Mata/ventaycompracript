@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { evaluarRequisitosPassword } from "@/lib/validators";
 import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 
 type Variante = "primario" | "secundario" | "compra" | "venta" | "peligro" | "fantasma";
@@ -58,6 +59,33 @@ export function Campo({ etiqueta, error, children }: { etiqueta: string; error?:
         </span>
       )}
     </label>
+  );
+}
+
+/** Lista de reglas de contraseña (mismas que zod en registro / admin). */
+export function RequisitosPassword({ password }: { password: string }) {
+  const filas = evaluarRequisitosPassword(password);
+  const escribiendo = password.length > 0;
+
+  return (
+    <ul className="mt-1.5 space-y-1 text-xs" aria-label="Requisitos de la contraseña">
+      {filas.map((r) => (
+        <li
+          key={r.id}
+          className={cn(
+            "flex items-start gap-2",
+            !escribiendo && "text-muted",
+            escribiendo && r.cumple && "text-up",
+            escribiendo && !r.cumple && "text-muted",
+          )}
+        >
+          <span className="mt-0.5 shrink-0" aria-hidden>
+            {escribiendo ? (r.cumple ? "✓" : "○") : "•"}
+          </span>
+          <span>{r.etiqueta}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0d13;
+  --color-surface: #111722;
+  --color-surface-2: #182132;
+  --color-line: #232d40;
+  --color-fg: #e8ecf4;
+  --color-muted: #8794ab;
+  --color-up: #34d399;
+  --color-down: #fb7185;
+  --color-accent: #fbbf24;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(900px 420px at 85% -10%, rgb(251 191 36 / 0.07), transparent 60%),
+    radial-gradient(700px 380px at -10% 10%, rgb(52 211 153 / 0.06), transparent 60%);
+  background-attachment: fixed;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Barras de desplazamiento discretas */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+
+@keyframes flash-up {
+  from { background-color: rgb(52 211 153 / 0.25); }
+  to   { background-color: transparent; }
+}
+@keyframes flash-down {
+  from { background-color: rgb(251 113 133 / 0.25); }
+  to   { background-color: transparent; }
+}
+.flash-up   { animation: flash-up 0.9s ease-out; }
+.flash-down { animation: flash-down 0.9s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .flash-up, .flash-down { animation: none; }
+}
